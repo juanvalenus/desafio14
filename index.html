@@ -1,24 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conversor de Monedas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="./assets/css/style.css">
-</head>
-<body>
-    <h1>Task Manager</h1>
+  </head>
+  <body>
+    <h1>Conversor de Monedas</h1>
+    <label for="amount">Monto en pesos chilenos:</label>
+    <input type="number" id="amount" placeholder="Ej: 10000" />
 
-    <input type="text" id="taskInput" placeholder="Enter a new task" />
-    <button id="addTaskButton">Add Task</button>
+    <label for="currency">Moneda:</label>
+    <select id="currency">
+      <option value="dolar">Dólar</option>
+      <option value="euro">Euro</option>
+    </select>
 
-    <h2>Tasks</h2>
-    <div id="taskList"></div>
+    <button id="convert">Convertir</button>
 
-    <h3>Summary</h3>
-    <p>Total Tasks: <span id="totalTasks">0</span></p>
-    <p>Completed Tasks: <span id="completedTasks">0</span></p>
+    <h2>Resultado:</h2>
+    <div id="result"></div>
+
+    <h2>Historial de los últimos 10 días</h2>
+    <canvas id="chart" width="400" height="200"></canvas>
 
     <script src="./assets/js/script.js"></script>
-</body>
+  </body>
 </html>

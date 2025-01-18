@@ -1,75 +1,68 @@
-let taskId = 1;
-const tasks = [
-    { id: taskId++, text: "Task 1", completed: false },
-    { id: taskId++, text: "Task 2", completed: false },
-    { id: taskId++, text: "Task 3", completed: false },
-];
+// Elementos del DOM
+const amountInput = document.getElementById("amount");
+const currencySelect = document.getElementById("currency");
+const convertButton = document.getElementById("convert");
+const resultDiv = document.getElementById("result");
+const chartCanvas = document.getElementById("chart");
 
-const taskInput = document.getElementById("taskInput");
-const addTaskButton = document.getElementById("addTaskButton");
-const taskList = document.getElementById("taskList");
-const totalTasks = document.getElementById("totalTasks");
-const completedTasks = document.getElementById("completedTasks");
+let chartInstance = null; // Almacenar instancia del gráfico
 
-function updateSummary() {
-    totalTasks.textContent = tasks.length;
-    completedTasks.textContent = tasks.filter(task => task.completed).length;
-}
+// Función para obtener datos desde la API
+const fetchData = async (endpoint) => {
+  try {
+    const response = await fetch(endpoint);
+    if (!response.ok) throw new Error("Error al obtener datos de la API");
+    return await response.json();
+  } catch (error) {
+    resultDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+    throw error;
+  }
+};
 
-function updateTaskList() {
-    taskList.innerHTML = "";
-    tasks.forEach((task) => {
-        const taskDiv = document.createElement("div");
-        taskDiv.className = `task ${task.completed ? 'completed' : ''}`;
+// Función para convertir moneda
+const convertCurrency = async () => {
+  const amount = parseFloat(amountInput.value);
+  const currency = currencySelect.value;
 
-        const taskText = document.createElement("span");
-        taskText.textContent = task.text;
-        taskText.className = "task-text";
-        taskDiv.appendChild(taskText);
+  if (isNaN(amount) || amount <= 0) {
+    resultDiv.innerHTML = `<p style="color:red;">Por favor, ingresa un monto válido.</p>`;
+    return;
+  }
 
-        if (task.completed) {
-            const status = document.createElement("span");
-            status.textContent = "(Realizado)";
-            status.className = "status";
-            taskDiv.appendChild(status);
-        }
+  try {
+    const data = await fetchData("https://mindicador.cl/api");
+    const exchangeRate = data[currency]?.valor;
 
-        const completeButton = document.createElement("button");
-        completeButton.textContent = task.completed ? "Undo" : "Complete";
-        completeButton.addEventListener("click", () => {
-            task.completed = !task.completed;
-            updateTaskList();
-            updateSummary();
-        });
-        taskDiv.appendChild(completeButton);
-
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Delete";
-        deleteButton.addEventListener("click", () => {
-            const index = tasks.findIndex(t => t.id === task.id);
-            if (index !== -1) {
-                tasks.splice(index, 1);
-                updateTaskList();
-                updateSummary();
-            }
-        });
-        taskDiv.appendChild(deleteButton);
-
-        taskList.appendChild(taskDiv);
-    });
-
-    updateSummary();
-}
-
-addTaskButton.addEventListener("click", () => {
-    const taskText = taskInput.value.trim();
-    if (taskText) {
-        tasks.push({ id: taskId++, text: taskText, completed: false });
-        taskInput.value = "";
-        updateTaskList();
-        updateSummary();
+    if (!exchangeRate) {
+      resultDiv.innerHTML = `<p style="color:red;">No se encontró información para la moneda seleccionada.</p>`;
+      return;
     }
-});
 
-updateTaskList();
-updateSummary();
+    const convertedAmount = (amount / exchangeRate).toFixed(2);
+    resultDiv.innerHTML = `<p>${amount} CLP son aproximadamente ${convertedAmount} ${currency.toUpperCase()}.</p>`;
+
+    // Obtener y mostrar los últimos 10 días de datos históricos
+    const historicalData = data[currency]?.serie.slice(0, 10).reverse(); // Últimos 10 días
+    if (historicalData && historicalData.length > 0) {
+      // Muestra los valores en la consola para que puedas verificar
+      console.log("Historial de los últimos 10 días:", historicalData);
+
+      // Generar gráfico con el historial
+      renderChart(historicalData);
+    } else {
+      resultDiv.innerHTML += `<p style="color:orange;">No hay datos históricos disponibles para graficar.</p>`;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  const data = await fetchData("https://mindicador.cl/api");
+console.log(data); // Verifica los datos
+
+};
+
+
+
+// Evento del botón
+convertButton.addEventListener("click", convertCurrency);
+
